@@ -1,0 +1,301 @@
+{
+  "created_by": "scripts/aggregate_hisdac_state_landuse.py",
+  "state_count": 49,
+  "cell_area_km2": 0.0625,
+  "boundary_handling": "Constant 2020 Census state boundaries for every HISDAC year.",
+  "states_included": [
+    {
+      "STATEFP": "01",
+      "STUSPS": "AL",
+      "NAME": "Alabama"
+    },
+    {
+      "STATEFP": "04",
+      "STUSPS": "AZ",
+      "NAME": "Arizona"
+    },
+    {
+      "STATEFP": "05",
+      "STUSPS": "AR",
+      "NAME": "Arkansas"
+    },
+    {
+      "STATEFP": "06",
+      "STUSPS": "CA",
+      "NAME": "California"
+    },
+    {
+      "STATEFP": "08",
+      "STUSPS": "CO",
+      "NAME": "Colorado"
+    },
+    {
+      "STATEFP": "09",
+      "STUSPS": "CT",
+      "NAME": "Connecticut"
+    },
+    {
+      "STATEFP": "10",
+      "STUSPS": "DE",
+      "NAME": "Delaware"
+    },
+    {
+      "STATEFP": "11",
+      "STUSPS": "DC",
+      "NAME": "District of Columbia"
+    },
+    {
+      "STATEFP": "12",
+      "STUSPS": "FL",
+      "NAME": "Florida"
+    },
+    {
+      "STATEFP": "13",
+      "STUSPS": "GA",
+      "NAME": "Georgia"
+    },
+    {
+      "STATEFP": "16",
+      "STUSPS": "ID",
+      "NAME": "Idaho"
+    },
+    {
+      "STATEFP": "17",
+      "STUSPS": "IL",
+      "NAME": "Illinois"
+    },
+    {
+      "STATEFP": "18",
+      "STUSPS": "IN",
+      "NAME": "Indiana"
+    },
+    {
+      "STATEFP": "19",
+      "STUSPS": "IA",
+      "NAME": "Iowa"
+    },
+    {
+      "STATEFP": "20",
+      "STUSPS": "KS",
+      "NAME": "Kansas"
+    },
+    {
+      "STATEFP": "21",
+      "STUSPS": "KY",
+      "NAME": "Kentucky"
+    },
+    {
+      "STATEFP": "22",
+      "STUSPS": "LA",
+      "NAME": "Louisiana"
+    },
+    {
+      "STATEFP": "23",
+      "STUSPS": "ME",
+      "NAME": "Maine"
+    },
+    {
+      "STATEFP": "24",
+      "STUSPS": "MD",
+      "NAME": "Maryland"
+    },
+    {
+      "STATEFP": "25",
+      "STUSPS": "MA",
+      "NAME": "Massachusetts"
+    },
+    {
+      "STATEFP": "26",
+      "STUSPS": "MI",
+      "NAME": "Michigan"
+    },
+    {
+      "STATEFP": "27",
+      "STUSPS": "MN",
+      "NAME": "Minnesota"
+    },
+    {
+      "STATEFP": "28",
+      "STUSPS": "MS",
+      "NAME": "Mississippi"
+    },
+    {
+      "STATEFP": "29",
+      "STUSPS": "MO",
+      "NAME": "Missouri"
+    },
+    {
+      "STATEFP": "30",
+      "STUSPS": "MT",
+      "NAME": "Montana"
+    },
+    {
+      "STATEFP": "31",
+      "STUSPS": "NE",
+      "NAME": "Nebraska"
+    },
+    {
+      "STATEFP": "32",
+      "STUSPS": "NV",
+      "NAME": "Nevada"
+    },
+    {
+      "STATEFP": "33",
+      "STUSPS": "NH",
+      "NAME": "New Hampshire"
+    },
+    {
+      "STATEFP": "34",
+      "STUSPS": "NJ",
+      "NAME": "New Jersey"
+    },
+    {
+      "STATEFP": "35",
+      "STUSPS": "NM",
+      "NAME": "New Mexico"
+    },
+    {
+      "STATEFP": "36",
+      "STUSPS": "NY",
+      "NAME": "New York"
+    },
+    {
+      "STATEFP": "37",
+      "STUSPS": "NC",
+      "NAME": "North Carolina"
+    },
+    {
+      "STATEFP": "38",
+      "STUSPS": "ND",
+      "NAME": "North Dakota"
+    },
+    {
+      "STATEFP": "39",
+      "STUSPS": "OH",
+      "NAME": "Ohio"
+    },
+    {
+      "STATEFP": "40",
+      "STUSPS": "OK",
+      "NAME": "Oklahoma"
+    },
+    {
+      "STATEFP": "41",
+      "STUSPS": "OR",
+      "NAME": "Oregon"
+    },
+    {
+      "STATEFP": "42",
+      "STUSPS": "PA",
+      "NAME": "Pennsylvania"
+    },
+    {
+      "STATEFP": "44",
+      "STUSPS": "RI",
+      "NAME": "Rhode Island"
+    },
+    {
+      "STATEFP": "45",
+      "STUSPS": "SC",
+      "NAME": "South Carolina"
+    },
+    {
+      "STATEFP": "46",
+      "STUSPS": "SD",
+      "NAME": "South Dakota"
+    },
+    {
+      "STATEFP": "47",
+      "STUSPS": "TN",
+      "NAME": "Tennessee"
+    },
+    {
+      "STATEFP": "48",
+      "STUSPS": "TX",
+      "NAME": "Texas"
+    },
+    {
+      "STATEFP": "49",
+      "STUSPS": "UT",
+      "NAME": "Utah"
+    },
+    {
+      "STATEFP": "50",
+      "STUSPS": "VT",
+      "NAME": "Vermont"
+    },
+    {
+      "STATEFP": "51",
+      "STUSPS": "VA",
+      "NAME": "Virginia"
+    },
+    {
+      "STATEFP": "53",
+      "STUSPS": "WA",
+      "NAME": "Washington"
+    },
+    {
+      "STATEFP": "54",
+      "STUSPS": "WV",
+      "NAME": "West Virginia"
+    },
+    {
+      "STATEFP": "55",
+      "STUSPS": "WI",
+      "NAME": "Wisconsin"
+    },
+    {
+      "STATEFP": "56",
+      "STUSPS": "WY",
+      "NAME": "Wyoming"
+    }
+  ],
+  "land_use_classes": {
+    "1": {
+      "code": "A",
+      "label": "Agriculture",
+      "slug": "agriculture"
+    },
+    "2": {
+      "code": "C",
+      "label": "Commercial",
+      "slug": "commercial"
+    },
+    "3": {
+      "code": "I",
+      "label": "Industrial",
+      "slug": "industrial"
+    },
+    "4": {
+      "code": "RC",
+      "label": "Recreational",
+      "slug": "recreational"
+    },
+    "5": {
+      "code": "RI",
+      "label": "Residential-Income",
+      "slug": "residential_income"
+    },
+    "6": {
+      "code": "RO",
+      "label": "Residential-Owned",
+      "slug": "residential_owned"
+    },
+    "7": {
+      "code": "GV",
+      "label": "Governmental",
+      "slug": "governmental"
+    },
+    "8": {
+      "code": "VL",
+      "label": "VacantLand",
+      "slug": "vacant_land"
+    }
+  },
+  "notes": [
+    "Majority rasters are categorical: each 250m cell stores the most frequent land-use theme.",
+    "Class-count rasters are cumulative property-record counts by theme at mid-decadal labels.",
+    "Outputs are wide one-row-per-state-year CSVs for classroom readability.",
+    "Alaska, Hawaii, Puerto Rico, and island territories are excluded because HISDAC-US land-use rasters cover CONUS."
+  ]
+}

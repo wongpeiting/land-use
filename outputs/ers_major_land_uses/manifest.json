@@ -1,0 +1,22 @@
+{
+  "created_by": "scripts/build_ers_major_land_uses.py",
+  "purpose": "Prepared state-level acreage CSVs from USDA ERS Major Land Uses data.",
+  "source": {
+    "name": "USDA ERS Major Land Uses all-data CSV",
+    "url": "https://www.ers.usda.gov/data-products/major-land-uses/",
+    "downloaded_file": "data/raw_mlu/major_land_uses_all_data_1945_2017.csv",
+    "release_date_in_file": "September 13, 2024"
+  },
+  "geography": "48 contiguous states; excludes Alaska, Hawaii, and District of Columbia.",
+  "outputs": [
+    "outputs/ers_major_land_uses/ers_mlu_2012_48_states_wide.csv",
+    "outputs/ers_major_land_uses/ers_mlu_2012_48_state_totals_by_category.csv",
+    "outputs/ers_major_land_uses/ers_mlu_state_year_48_states_wide.csv"
+  ],
+  "notes": [
+    "ERS Major Land Uses is an acreage accounting dataset for broad land-use categories.",
+    "The current ERS downloadable all-data CSV is a revised 2024 release.",
+    "The CSVs calculate 250,000-acre block counts as acres / 250000.",
+    "The outputs do not spatially place land-use categories within states; use a spatial layer such as NLCD if approximate placement is needed."
+  ]
+}

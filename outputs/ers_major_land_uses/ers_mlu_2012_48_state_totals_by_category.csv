@@ -1,0 +1,17 @@
+Land use,land_use_slug,acres,blocks_250k_acres,share_of_48_state_total_land
+Cropland idled,cropland_idled,39070000.0,156.28,0.02066033759848297
+Cropland used for crops,cropland_used_for_crops,339708000.0,1358.8319999999999,0.17963864768122478
+Cropland used for pasture,cropland_used_for_pasture,12744000.0,50.976,0.006739066863451932
+Land in defense and industrial areas,defense_industrial,24986000.0,99.944,0.013212674564517416
+"Farmsteads, roads, and miscellaneous farmland",farmsteads_roads_misc_farmland,8302000.0,33.208,0.004390123438510509
+Forest-use land (all),forest_use_land,538566000.0,2154.264,0.28479537699167085
+Grassland pasture and range,grassland_pasture_range,654019000.0,2616.076,0.3458472827187672
+Grazed forest-use land grazed,grazed_forest_use_land,129780000.0,519.12,0.06862806791735654
+Miscellaneous other land,miscellaneous_other_land,68870000.0,275.48,0.036418670345726184
+Land in rural parks and wildlife areas,rural_parks_wildlife,108983000.0,435.932,0.05763054959036267
+Land in rural transportation facilities,rural_transportation,26407000.0,105.628,0.01396410378712925
+All special uses of land,special_uses_land,168679000.0,674.716,0.08919798018363218
+Total cropland,total_cropland,391523000.0,1566.092,0.207038580946272
+Total land,total_land,1891063000.0,7564.2519999999995,1.0
+Ungrazed forest-use land,ungrazed_forest_use_land,408787000.0,1635.148,0.2161678378774266
+Land in urban areas,urban_areas,69404000.0,277.616,0.03670105120770699

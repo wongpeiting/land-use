@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How America's Land Changed</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #fafafa;
+      color: #333;
+      display: flex;
+    }
+
+    /* ─── Admin Panel ─────────────────────────────────────────────────── */
+    #admin {
+      width: 280px;
+      min-height: 100vh;
+      background: #fff;
+      border-right: 1px solid #e0e0e0;
+      padding: 20px 16px;
+      overflow-y: auto;
+      position: sticky;
+      top: 0;
+      flex-shrink: 0;
+      font-size: 12px;
+    }
+
+    #admin h3 {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #999;
+      margin: 18px 0 6px;
+    }
+    #admin h3:first-child { margin-top: 0; }
+
+    #admin label { font-size: 11px; display: block; margin-bottom: 4px; color: #555; }
+
+    #admin select, #admin input[type="range"] {
+      width: 100%;
+      margin-bottom: 10px;
+      font-size: 11px;
+      padding: 4px 6px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #fff;
+    }
+
+    .color-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .color-row input[type="color"] { width: 24px; height: 20px; border: 1px solid #ddd; border-radius: 3px; cursor: pointer; padding: 0; }
+    .color-row span { font-size: 11px; color: #555; }
+
+    .year-range-display { font-size: 11px; color: #666; text-align: center; margin-bottom: 6px; }
+
+    .chart-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 10px; }
+    .chart-type-grid button {
+      padding: 5px 4px; font-size: 10px;
+      background: #f0f0f0; color: #333; border: 1px solid #ddd; border-radius: 3px; cursor: pointer;
+    }
+    .chart-type-grid button.active { background: #333; color: #fff; border-color: #333; }
+
+    .checkbox-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+    .checkbox-row input { margin: 0; }
+    .checkbox-row label { margin: 0; font-size: 11px; }
+
+    /* ─── Main Content ────────────────────────────────────────────────── */
+    #main { flex: 1; padding: 24px 32px; overflow: hidden; max-width: 100%; }
+
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #666; margin-bottom: 16px; }
+
+    #legend { display: flex; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #555; }
+    .legend-swatch { width: 18px; height: 3px; border-radius: 1px; }
+
+    .featured-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 28px; }
+    .compact-grid { display: grid; grid-template-columns: repeat(var(--compact-cols, 8), 1fr); gap: 10px; margin-bottom: 28px; overflow: hidden; }
+
+    .panel-header { display: flex; align-items: center; gap: 4px; margin-bottom: 1px; }
+    .panel-title { font-size: 11px; font-weight: 700; margin: 0; }
+    .compact-header { display: flex; align-items: center; gap: 3px; margin-bottom: 2px; }
+    .panel-annotation { font-size: 9px; color: #777; margin: 3px 0 0; line-height: 1.3; }
+    .compact-title { font-size: 9px; font-weight: 600; margin: 0; }
+
+    .axis text { font-size: 8px; fill: #999; }
+    .axis line, .axis path { stroke: #ddd; }
+    .category-area { stroke: none; opacity: 0.85; }
+    .category-line { fill: none; stroke-width: 1.5px; }
+    .compact-grid .category-line { stroke-width: 1px; }
+
+    .source { font-size: 10px; color: #999; margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee; }
+
+    .tooltip {
+      position: fixed; pointer-events: none;
+      background: rgba(0,0,0,0.85); color: #fff;
+      padding: 8px 12px; border-radius: 4px;
+      font-size: 11px; line-height: 1.5; white-space: nowrap;
+      opacity: 0; transition: opacity 0.15s; z-index: 1000;
+    }
+    .tooltip.visible { opacity: 1; }
+    .hover-line { stroke: #999; stroke-width: 0.5px; stroke-dasharray: 2,2; pointer-events: none; }
+
+    /* Admin toggle button (mobile) */
+    #admin-toggle {
+      display: none;
+      position: fixed;
+      top: 10px; left: 10px;
+      z-index: 999;
+      background: #333; color: #fff;
+      border: none; border-radius: 4px;
+      padding: 6px 12px; font-size: 12px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 1100px) {
+      .featured-grid { grid-template-columns: repeat(2, 1fr); }
+      .compact-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    /* Make chart SVGs responsive, but not mini-map SVGs */
+    .featured-grid > div > svg, .compact-grid > div > svg {
+      width: 100%;
+      height: auto;
+    }
+    .panel-header svg, .compact-header svg {
+      width: auto !important;
+      height: auto !important;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+      #admin-toggle { display: block; }
+      #admin {
+        position: fixed;
+        left: -300px;
+        top: 0;
+        z-index: 998;
+        transition: left 0.3s;
+        height: 100vh;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+      }
+      #admin.open { left: 0; }
+      body { display: block; }
+      #main { padding: 16px; }
+      h1 { font-size: 20px; }
+      .subtitle { font-size: 12px; }
+      .featured-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px; }
+      .compact-grid { --compact-cols: 4 !important; grid-template-columns: repeat(4, 1fr) !important; gap: 8px; }
+      .panel-annotation { font-size: 8px; }
+      #legend { gap: 10px; }
+      .legend-item { font-size: 10px; }
+    }
+
+    @media (max-width: 480px) {
+      .featured-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      .compact-grid { grid-template-columns: repeat(3, 1fr) !important; }
+      h1 { font-size: 18px; }
+      #main { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <button id="admin-toggle">Settings</button>
+  <div id="admin">
+    <h3>Sort by</h3>
+    <select id="sort-select">
+      <option value="urban_growth">Urban growth (highest)</option>
+      <option value="forest_decline">Forest decline (most loss)</option>
+      <option value="cropland_decline">Cropland decline (most loss)</option>
+      <option value="grassland_decline">Grassland decline (most loss)</option>
+      <option value="parks_growth">Parks & Wildlife growth (highest)</option>
+      <option value="defense_decline">Defense & Industrial decline (most loss)</option>
+      <option value="defense_growth">Defense & Industrial growth (highest)</option>
+      <option value="urban_growth_asc">Urban growth (lowest)</option>
+      <option value="alphabetical">Alphabetical</option>
+    </select>
+
+    <h3>Time-series charts</h3>
+    <div class="chart-type-grid">
+      <button data-type="stacked_area">Stacked Area</button>
+      <button data-type="line">Line</button>
+      <button data-type="normalized_stream" class="active">Stream</button>
+      <button data-type="stacked_bar">Stacked Bar</button>
+      <button data-type="pct_change">% Change</button>
+      <button data-type="sparkline">Sparkline</button>
+    </div>
+
+    <h3>Non-time-series charts</h3>
+    <div class="chart-type-grid">
+      <button data-type="treemap">Treemap</button>
+      <button data-type="waffle">Waffle</button>
+    </div>
+    <div id="snapshot-controls" style="display:none;margin-bottom:10px;">
+      <label>Year:</label>
+      <select id="snapshot-year"></select>
+    </div>
+
+    <h3>Color scheme</h3>
+    <select id="color-scheme">
+      <option value="default">Land (default)</option>
+      <option value="muted">Muted Earth</option>
+      <option value="vivid">Vivid</option>
+      <option value="monochrome">Monochrome</option>
+      <option value="pastel">Pastel</option>
+      <option value="dark">Dark</option>
+      <option value="nyt">NYT Style</option>
+      <option value="bloomberg">Bloomberg</option>
+      <option value="ft">FT Pink</option>
+      <option value="economist">Economist</option>
+      <option value="sequential">Heat Sequential</option>
+    </select>
+
+    <h3>Tweaks</h3>
+<label>Desaturate non-sorted categories:</label>
+    <input type="range" id="desaturate-slider" min="0" max="1" step="0.05" value="0">
+    <div class="year-range-display" id="desaturate-display">Off</div>
+    <label>Curve:</label>
+    <select id="curve-select">
+      <option value="monotoneX">Smooth (monotone)</option>
+      <option value="linear">Linear</option>
+      <option value="step">Step</option>
+      <option value="basis">Basis (soft)</option>
+      <option value="cardinal">Cardinal</option>
+    </select>
+    <div class="checkbox-row"><input type="checkbox" id="toggle-minimap" checked><label for="toggle-minimap">Show state mini-map</label></div>
+    <label>Compact columns:</label>
+    <select id="compact-cols">
+      <option value="6">6</option>
+      <option value="8" selected>8</option>
+      <option value="10">10</option>
+    </select>
+
+    <h3>Year range</h3>
+    <div class="year-range-display" id="year-range-display">1945 – 2017</div>
+    <label>Start:</label>
+    <input type="range" id="year-start" min="1945" max="2017" value="1945" step="1">
+    <label>End:</label>
+    <input type="range" id="year-end" min="1945" max="2017" value="2017" step="1">
+
+    <h3>Break down "Other" into</h3>
+    <div id="other-options">
+      <div class="checkbox-row"><input type="checkbox" id="opt-parks" value="share_of_total_land_rural_parks_wildlife" checked><label for="opt-parks">Parks &amp; Wildlife</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="opt-defense" value="share_of_total_land_defense_industrial" checked><label for="opt-defense">Defense &amp; Industrial</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="opt-transport" value="share_of_total_land_rural_transportation"><label for="opt-transport">Rural Transportation</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="opt-farmsteads" value="share_of_total_land_farmsteads_roads_misc_farmland"><label for="opt-farmsteads">Farmsteads &amp; Roads</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="opt-misc" value="share_of_total_land_miscellaneous_other_land"><label for="opt-misc">Miscellaneous</label></div>
+      <div class="checkbox-row"><input type="checkbox" id="opt-special" value="share_of_total_land_special_uses_land"><label for="opt-special">Special Uses (total)</label></div>
+    </div>
+
+    <h3>Colors</h3>
+    <div id="color-pickers"></div>
+
+    <h3>Featured count</h3>
+    <select id="featured-count">
+      <option value="4">4 states</option>
+      <option value="8" selected>8 states</option>
+      <option value="12">12 states</option>
+      <option value="0">None (all compact)</option>
+    </select>
+
+
+    <h3>Export graphic</h3>
+    <button id="export-svg-btn">Download SVG</button>
+    <button id="export-png-btn">Download PNG</button>
+    <button id="export-jpg-btn">Download JPG</button>
+
+    <h3>Export / Import settings</h3>
+    <button id="export-btn">Export settings</button>
+    <button id="import-btn">Import settings</button>
+    <textarea id="settings-box" rows="4" style="width:100%;font-size:9px;font-family:monospace;border:1px solid #ddd;border-radius:4px;padding:4px;display:none;margin-top:4px;resize:vertical;"></textarea>
+  </div>
+
+  <div id="main">
+    <div id="export-area">
+      <h1 id="headline">Concrete Ate the Eastern Seaboard</h1>
+      <p class="subtitle" id="subheadline">How urban sprawl reshaped land use across 48 states, 1945–2017</p>
+      <div id="legend"></div>
+      <div id="featured" class="featured-grid"></div>
+      <div id="compact"></div>
+      <p class="source">Source: USDA Economic Research Service, Major Land Uses series.</p>
+    </div>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    // ─── Configuration ───────────────────────────────────────────────────────────
+
+    const BASE_CATEGORIES = [
+      { key: 'share_of_total_land_grassland_pasture_range', label: 'Grassland', color: '#C4A882' },
+      { key: 'share_of_total_land_forest_use_land', label: 'Forest', color: '#2D6A4F' },
+      { key: 'share_of_total_land_total_cropland', label: 'Cropland', color: '#D4A017' },
+      { key: 'share_of_total_land_urban_areas', label: 'Urban', color: '#333333' },
+    ];
+
+    const OTHER_OPTIONS = [
+      { key: 'share_of_total_land_rural_parks_wildlife', label: 'Parks & Wildlife', color: '#7CB342' },
+      { key: 'share_of_total_land_defense_industrial', label: 'Defense', color: '#17a8ab' },
+      { key: 'share_of_total_land_rural_transportation', label: 'Transport', color: '#90A4AE' },
+      { key: 'share_of_total_land_farmsteads_roads_misc_farmland', label: 'Farmsteads', color: '#BCAAA4' },
+      { key: 'share_of_total_land_miscellaneous_other_land', label: 'Misc.', color: '#B0BEC5' },
+      { key: 'share_of_total_land_special_uses_land', label: 'Special Uses', color: '#A1887F' },
+    ];
+
+    let activeOtherKeys = ['share_of_total_land_rural_parks_wildlife', 'share_of_total_land_defense_industrial'];
+
+    function getCategories() {
+      // Stack order: Grassland, Forest, [Parks, Defense, ...], Cropland, Urban, Other
+      const cats = [];
+      // Add Grassland and Forest
+      cats.push(BASE_CATEGORIES[0]); // Grassland
+      cats.push(BASE_CATEGORIES[1]); // Forest
+      // Insert active "Other" sub-categories here (between Forest and Cropland)
+      OTHER_OPTIONS.filter(o => activeOtherKeys.includes(o.key)).forEach(o => cats.push(o));
+      // Add Cropland and Urban
+      cats.push(BASE_CATEGORIES[2]); // Cropland
+      cats.push(BASE_CATEGORIES[3]); // Urban
+      // Residual Other on top
+      cats.push({ key: 'other', label: 'Other', color: otherColor });
+      return cats;
+    }
+
+    // ─── Headlines and annotations per sort mode ─────────────────────────────────
+
+    const COPY = {
+      urban_growth: {
+        headline: 'Concrete Ate the Eastern Seaboard',
+        subheadline: 'How urban sprawl reshaped land use across 48 states, 1945–2017',
+        annotations: {
+          MA: 'Route 128 turned woodlands into tech parks. Forest fell from 64% to 41%; parkland surged to 12%.',
+          CT: 'NYC commuters drove sprawl. Urban quintupled; cropland shrank from 17% to 4%.',
+          RI: 'Already 14% urban in 1945 — hit 40% by 2017. Nowhere left to build.',
+          NJ: 'Lost more farmland to development than any state. Parks grew from 0.5% to 13% in response.',
+          DE: 'Urban grew from 2% to 25%. Wilmington suburbs spread south through farmland.',
+          MD: 'DC suburbs ate Montgomery County. Half its farmland gone by the 1960s.',
+          FL: 'Air conditioning opened Florida to mass migration. Forest halved; parkland exploded from 0.4% to 17%.',
+          NC: 'Research Triangle Park and Charlotte\'s banking boom drove development that consumed 105 acres of land per day.',
+          GA: 'Atlanta sprawled outward. Urban grew from 1% to 10%; forest reclaimed old farms.',
+          OH: 'Cleveland and Columbus suburbs spread. Urban grew from 3% to 12%.',
+          PA: 'Philly and Pittsburgh suburbs ate into forest and farm.',
+          SC: 'Coastal and Charlotte-adjacent development. Urban grew from 1% to 9%.',
+        }
+      },
+      forest_decline: {
+        headline: 'America\'s Fastest Shrinking Forests',
+        subheadline: 'States where forest cover declined most, 1945–2017',
+        annotations: {
+          CA: 'Forest fell from 44% to 17%. Fire, development, and drought took California\'s woodlands.',
+          FL: 'Forest dropped from 66% to 39%. Developers cleared for subdivisions; Everglades under siege.',
+          NJ: 'Forest shrank from 48% to 22%. Suburbia consumed what was once the Pine Barrens corridor.',
+          MA: 'Forest fell from 64% to 41%. Route 128 tech corridor carved through New England woods.',
+          RI: 'Forest declined from 58% to 44%. Small state, shrinking canopy.',
+          TX: 'Forest fell from 21% to 9%. Ranching expansion and drought thinned the Piney Woods.',
+          CT: 'Forest dropped from 59% to 46%. NYC commuter suburbs spread north into wooded hills.',
+          WA: 'Forest shrank from 54% to 42%. Timber industry and Seattle metro expansion.',
+          NH: 'Forest fell from 83% to 73%. Boston commuter belt crept north.',
+          OR: 'Forest declined from 48% to 39%. Timber harvesting and Willamette Valley growth.',
+          ID: 'Forest fell from 36% to 31%. Boise growth and fire pressure.',
+          MI: 'Forest held at 52% to 53%. One of few states that held steady.',
+        }
+      },
+      cropland_decline: {
+        headline: 'The South Stopped Farming',
+        subheadline: 'Where cropland vanished fastest — not always to suburbs',
+        annotations: {
+          AL: 'Cropland fell from 25% to 9%. Cotton collapsed; land reverted to forest without suburbs.',
+          SC: 'Cropland dropped from 27% to 10%. Tobacco and cotton farms abandoned post-mechanisation.',
+          GA: 'Cropland shrank from 28% to 12%. Atlanta sprawled, but most lost farmland became forest.',
+          TN: 'Cropland fell from 35% to 19%. Small farms vanished; Nashville grew.',
+          KY: 'Cropland declined from 41% to 26%. Tobacco declined; forest filled the gaps.',
+          MD: 'Cropland fell from 37% to 23%. DC suburbs ate prime agricultural land.',
+          VT: 'Cropland shrank from 22% to 7%. Dairy farms consolidated; forest reclaimed hillsides.',
+          NJ: 'Cropland fell from 24% to 10%. The Garden State\'s farms became parking lots.',
+          NY: 'Cropland dropped from 27% to 14%. Upstate farms declined as dairy consolidated.',
+          CT: 'Cropland fell from 17% to 4%. Tobacco Valley farms became commuter developments.',
+          NC: 'Cropland declined from 24% to 15%. Tobacco fell; research parks rose.',
+          VA: 'Cropland fell from 23% to 11%. NoVA sprawl consumed Loudoun County farms.',
+        }
+      },
+      grassland_decline: {
+        headline: 'Where the Range Shrank',
+        subheadline: 'States that lost the most pasture and rangeland, 1945–2017',
+        annotations: {
+          WV: 'Grassland fell from 21% to 8%. Mountain pastures reverted to forest as farms failed.',
+          VT: 'Grassland dropped from 17% to 5%. Dairy pastures abandoned; hillsides reforested.',
+          OH: 'Grassland fell from 17% to 7%. Suburbs and reforestation replaced old pastures.',
+          ID: 'Grassland shrank from 44% to 35%. Federal land policy shifts and development.',
+          CT: 'Grassland fell from 9% to 1%. The last pastures became subdivisions.',
+          IA: 'Grassland dropped from 16% to 9%. Corn and soy expansion consumed pasture.',
+          NY: 'Grassland fell from 15% to 8%. Dairy consolidation left hilltop pastures empty.',
+          IL: 'Grassland shrank from 11% to 5%. Cropland and suburbs ate the remaining prairie.',
+          RI: 'Grassland fell from 6% to 1%. Tiny to begin with; urbanised completely.',
+          KS: 'Grassland declined from 39% to 34%. Held better than most — still cattle country.',
+          IN: 'Grassland fell from 11% to 7%. Corn Belt expanded at pasture\'s expense.',
+          WI: 'Grassland dropped from 11% to 8%. Dairy consolidation freed up land.',
+        }
+      },
+      urban_growth_asc: {
+        headline: 'The States That Stayed Rural',
+        subheadline: 'Where urbanisation barely registered, 1945–2017',
+        annotations: {
+          MT: 'Urban barely moved, from 0.1% to 0.2%. Still overwhelmingly ranch and forest land.',
+          WY: 'Urban crept from 0.1% to 0.2%. Energy extraction matters more than sprawl.',
+          SD: 'Urban grew from 0.1% to 0.4%. Great Plains stayed agricultural.',
+          ND: 'Urban inched from 0.1% to 0.3%. Oil brought workers, not suburbs.',
+          NM: 'Urban grew from 0.2% to 0.7%. Vast federal and tribal land limits development.',
+          NV: 'Urban rose from 0.0% to 0.8%. Las Vegas sprawled but the state is 87% federal land.',
+          ID: 'Urban grew from 0.1% to 0.7%. Boise grew but couldn\'t dent the state\'s scale.',
+          NE: 'Urban barely moved from 0.3% to 0.7%. Split almost evenly between cropland and grassland for 72 years.',
+          ME: 'Urban grew from 0.5% to 1.2%. Too far north for commuter sprawl.',
+        }
+      },
+      parks_growth: {
+        headline: 'The Great Land Grab — for Conservation',
+        subheadline: 'States where parks and wildlife areas grew the most, 1945–2017',
+        annotations: {
+          FL: 'Parks surged from 0.4% to 17%. Everglades protection and state wildlife refuges exploded as sprawl threatened ecosystems.',
+          CA: 'Parks grew from 5% to 20%. National parks, state reserves, and coastal protection doubled California\'s preserved land.',
+          NJ: 'Parks jumped from 0.5% to 13%. The most urbanised state fought back with aggressive open-space preservation.',
+          MA: 'Parks surged from 0.4% to 12%. Conservation backlash to Route 128 sprawl. Land trusts proliferated.',
+          WA: 'Parks grew from 3% to 15%. Olympic, Rainier, and state lands expanded as timber declined.',
+          ID: 'Parks rose from 0.2% to 10%. Wilderness designations and wildlife corridors carved from forest and range.',
+          CO: 'Parks grew from 1% to 10%. Front Range growth pushed Rocky Mountain conservation efforts.',
+          AZ: 'Parks expanded from 2% to 10%. Federal monument designations and tribal land protections.',
+          DE: 'Parks grew from 1% to 9%. Tiny state, aggressive preservation to offset Wilmington sprawl.',
+          NH: 'Parks grew from 1% to 8%. White Mountain tourism drove conservation.',
+          OR: 'Parks expanded from 2% to 8%. Forest reserves and coastal protection.',
+          VT: 'Parks grew from near 0% to 6%. Green Mountain conservation as dairy farms vanished.',
+        }
+      },
+      defense_decline: {
+        headline: 'Bases Closed, Land Returned',
+        subheadline: 'Where military and industrial land shrank most, 1945–2017',
+        annotations: {
+          AZ: 'Defense fell from 7% to 4%. Cold War bases downsized; some land returned to federal reserves.',
+          DE: 'Defense shrank from 1.3% to 0.3%. Dover AFB downsized; surplus land converted.',
+          MT: 'Defense fell from 0.8% to 0.1%. Missile silos decommissioned across the Great Plains.',
+          SD: 'Defense dropped from 0.7% to near 0%. Ellsworth AFB reduced; ICBM sites closed.',
+          RI: 'Defense fell from 0.9% to 0.3%. Naval Station Newport downsized after the Cold War.',
+          AR: 'Defense declined from 0.8% to 0.3%. Camp Robinson and Fort Chaffee reduced.',
+          KY: 'Defense fell from 1.2% to 0.7%. Fort Knox and Fort Campbell restructured.',
+          MN: 'Defense dropped from 0.5% to near 0%. Cold War installations wound down.',
+        }
+      },
+      defense_growth: {
+        headline: 'Where the Pentagon Staked Its Land',
+        subheadline: 'States where defense and industrial land expanded, 1945–2017',
+        annotations: {
+          NM: 'Defense grew from 2% to 5%. White Sands, Los Alamos, and Sandia — the nuclear corridor expanded.',
+          NV: 'Defense grew from 4% to 5%. Nevada Test Site and Nellis Range Complex.',
+          UT: 'Defense expanded from 1% to 3%. Dugway Proving Ground and Hill AFB expansion.',
+          GA: 'Defense grew from 0.4% to 1%. Fort Benning and Fort Stewart grew with force restructuring.',
+          NC: 'Defense grew from 0.8% to 1.5%. Fort Bragg and Camp Lejeune — the military\'s East Coast hub.',
+          VA: 'Defense expanded from 0.6% to 1.5%. Pentagon complex, Quantico, Norfolk — the defense capital.',
+          TX: 'Defense grew from 1% to 2%. Fort Hood, Fort Bliss, and joint bases.',
+          AL: 'Defense grew from 0.7% to 1%. Redstone Arsenal and Maxwell AFB.',
+        }
+      },
+      alphabetical: {
+        headline: 'How America\'s Land Changed, 1945–2017',
+        subheadline: 'Share of each state\'s total land area in major categories',
+        annotations: {}
+      }
+    };
+
+    // ─── State ───────────────────────────────────────────────────────────────────
+
+    // ─── Mini-map data ────────────────────────────────────────────────────────────
+    const US_OUTLINE = "M1 3.5 L2.5 3 L3 2.5 L5 2.5 L5.5 1.5 L6.5 1 L7 2 L8 2.5 L9 3 L10 3 L11 3.5 L12 4 L13 3.5 L14 3 L15 3 L16 2.5 L17 2 L17.5 2.5 L18 3 L18.5 3.5 L19 4 L19 5 L18.5 5.5 L18.5 6.5 L19 7 L18.5 7.5 L18 8 L17.5 8.5 L17 8 L16 8.5 L15.5 9 L15 9.5 L14 9.5 L13 10 L12.5 10.5 L12 11 L11.5 12 L11.5 13 L10.5 12.5 L10 12 L9 11.5 L8.5 10.5 L8 10 L7 10 L6.5 10.5 L6 10 L5.5 9 L5 8.5 L4.5 8 L4 7 L3 6.5 L2 6 L1.5 5.5 L1 4.5 Z";
+    const STATE_CENTROIDS = {
+      WA:[2.5,2],OR:[2,3.5],CA:[1.5,5.5],NV:[3,4.5],ID:[3.5,3],MT:[5,2],WY:[5.5,3.5],UT:[4,5],AZ:[3.5,7],CO:[5.5,5],NM:[4.5,7],ND:[7.5,2],SD:[7.5,3],NE:[7.5,4],KS:[7.5,5.5],OK:[7.5,7],TX:[7,8.5],MN:[9,2.5],IA:[9.5,4],MO:[10,5.5],AR:[9.5,7],LA:[9.5,8.5],WI:[10.5,2.5],IL:[11,4.5],MS:[10.5,8],MI:[12,3],IN:[12,4.5],KY:[13,5.5],TN:[13,6.5],AL:[12,7.5],OH:[13.5,4],GA:[13.5,7.5],FL:[13.5,9.5],WV:[14.5,5],VA:[15.5,5.5],NC:[15.5,6.5],SC:[14.5,7],PA:[15.5,4],NY:[16,3],NJ:[16.5,4.5],DE:[16.5,5],MD:[16,5],CT:[17.5,3.5],RI:[18,3.5],MA:[18,3],VT:[17,2],NH:[17.5,2],ME:[18,1.5]
+    };
+    let showMiniMap = true;
+
+    function miniMapHTML(abbr, size) {
+      if (!showMiniMap || !STATE_CENTROIDS[abbr]) return '';
+      const c = STATE_CENTROIDS[abbr];
+      return `<svg viewBox="0 0 20 14" width="${size}" height="${Math.round(size*0.7)}" style="flex-shrink:0"><path d="${US_OUTLINE}" fill="#eee" stroke="#ccc" stroke-width="0.4"/><circle cx="${c[0]}" cy="${c[1]}" r="1.2" fill="#E53935" opacity="0.9"/></svg>`;
+    }
+
+    // ─── Snapshot annotations (for treemap/waffle) ─────────────────────────────
+    function getSnapshotAnnotation(abbr, stateData) {
+      const row = stateData.find(d => d.year === snapshotYear) || stateData[stateData.length - 1];
+      const firstRow = stateData[0];
+      if (!row || !firstRow) return '';
+
+      const highlightKey = SORT_HIGHLIGHT_KEY[sortBy];
+      const cats = getCategories().filter(c => c.key !== 'other');
+      const vals = cats.map(c => ({ key: c.key, label: c.label, pct: (row[c.key] || 0) * 100, firstPct: (firstRow[c.key] || 0) * 100 }));
+
+      // If we have a highlighted category from sorting, lead with that
+      if (highlightKey) {
+        const focus = vals.find(v => v.key === highlightKey);
+        if (focus) {
+          const diff = focus.pct - focus.firstPct;
+          const direction = diff > 0 ? 'up' : 'down';
+          const verb = diff > 0 ? 'grew' : 'shrank';
+          const rest = vals.filter(v => v.key !== highlightKey).sort((a, b) => b.pct - a.pct);
+          const top = rest[0];
+
+          if (Math.abs(diff) < 1) {
+            return `${focus.label} barely changed at ${focus.pct.toFixed(0)}%. Largest category: ${top.label} at ${top.pct.toFixed(0)}%.`;
+          } else {
+            return `${focus.label} ${verb} from ${focus.firstPct.toFixed(0)}% to ${focus.pct.toFixed(0)}% (${direction} ${Math.abs(diff).toFixed(0)} pp). ${top.label}: ${top.pct.toFixed(0)}%.`;
+          }
+        }
+      }
+
+      // Fallback: generic composition
+      const sorted = vals.sort((a, b) => b.pct - a.pct);
+      return `${sorted[0].label} ${sorted[0].pct.toFixed(0)}%, ${sorted[1].label} ${sorted[1].pct.toFixed(0)}%, ${sorted[2].label} ${sorted[2].pct.toFixed(0)}%.`;
+    }
+
+    const ALL_YEARS = [1945,1949,1954,1959,1964,1969,1974,1978,1982,1987,1992,1997,2002,2007,2012,2017];
+    let chartType = 'normalized_stream';
+    let sortBy = 'urban_growth';
+    let yearStart = 1945;
+    let yearEnd = 2017;
+    let featuredCount = 8;
+    let areaOpacity = 0.85;
+    let desaturateAmount = 0;
+    let curveType = 'monotoneX';
+    let compactCols = 8;
+    let snapshotYear = 2017;
+
+    // Map sort mode to the key it highlights
+    const SORT_HIGHLIGHT_KEY = {
+      urban_growth: 'share_of_total_land_urban_areas',
+      urban_growth_asc: 'share_of_total_land_urban_areas',
+      forest_decline: 'share_of_total_land_forest_use_land',
+      cropland_decline: 'share_of_total_land_total_cropland',
+      grassland_decline: 'share_of_total_land_grassland_pasture_range',
+      parks_growth: 'share_of_total_land_rural_parks_wildlife',
+      defense_decline: 'share_of_total_land_defense_industrial',
+      defense_growth: 'share_of_total_land_defense_industrial',
+      alphabetical: null,
+    };
+
+    function desaturateColor(hex, amount) {
+      // amount 0 = original, 1 = fully grey
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      const grey = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+      const mix = (c) => Math.round(c + (grey - c) * amount);
+      return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
+    }
+
+    function getDisplayColor(cat) {
+      if (desaturateAmount === 0) return cat.color;
+      const highlightKey = SORT_HIGHLIGHT_KEY[sortBy];
+      if (!highlightKey || cat.key === highlightKey) return cat.color;
+      return desaturateColor(cat.color, desaturateAmount);
+    }
+    let byState = null;
+
+    const COLOR_SCHEMES = {
+      default:    { grassland: '#C4A882', forest: '#2D6A4F', cropland: '#D4A017', urban: '#333333', parks: '#7CB342', defense: '#17a8ab', other: '#e0e0e0' },
+      muted:      { grassland: '#A8977A', forest: '#4A7C6F', cropland: '#BF9B30', urban: '#5C5C5C', parks: '#6D9B3A', defense: '#7D6050', other: '#D5D0CA' },
+      vivid:      { grassland: '#FF8F00', forest: '#1B5E20', cropland: '#FFD600', urban: '#D50000', parks: '#00C853', defense: '#6D4C41', other: '#BDBDBD' },
+      monochrome: { grassland: '#BDBDBD', forest: '#616161', cropland: '#9E9E9E', urban: '#212121', parks: '#757575', defense: '#424242', other: '#EEEEEE' },
+      pastel:     { grassland: '#FFE0B2', forest: '#A5D6A7', cropland: '#FFF59D', urban: '#90A4AE', parks: '#C5E1A5', defense: '#D7CCC8', other: '#F5F5F5' },
+      dark:       { grassland: '#8D6E63', forest: '#1B5E20', cropland: '#F9A825', urban: '#000000', parks: '#33691E', defense: '#4E342E', other: '#424242' },
+      nyt:        { grassland: '#D4B483', forest: '#4E8542', cropland: '#E8A838', urban: '#2B2B2B', parks: '#6B8E4E', defense: '#8C7A6B', other: '#E8E4DF' },
+      bloomberg:  { grassland: '#E8B960', forest: '#5B8C5A', cropland: '#C7A33F', urban: '#3D3D3D', parks: '#7DAA6D', defense: '#9C8570', other: '#D6D2C4' },
+      ft:         { grassland: '#E6D5AC', forest: '#0D7680', cropland: '#EB5E57', urban: '#2E2E2E', parks: '#2CA58D', defense: '#A0522D', other: '#FFF1E5' },
+      economist:  { grassland: '#E3B13E', forest: '#006BA6', cropland: '#DB444B', urban: '#3C3C3C', parks: '#36A2EB', defense: '#8B5E3C', other: '#D4D4D4' },
+      sequential: { grassland: '#FDD49E', forest: '#EF6548', cropland: '#FDBB84', urban: '#7F0000', parks: '#FC8D59', defense: '#B30000', other: '#FEF0D9' },
+    };
+
+    const FEAT_WIDTH = 250;
+    const FEAT_HEIGHT = 140;
+    const FEAT_MARGIN = { top: 6, right: 10, bottom: 20, left: 36 };
+    const COMPACT_WIDTH = 115;
+    const COMPACT_HEIGHT = 64;
+    const COMPACT_MARGIN = { top: 6, right: 4, bottom: 14, left: 28 };
+
+    const tooltip = d3.select('#tooltip');
+
+    // ─── Sorting ─────────────────────────────────────────────────────────────────
+
+    function getSortedStates() {
+      const states = Array.from(byState.keys());
+      return states.sort((a, b) => {
+        const dA = byState.get(a), dB = byState.get(b);
+        const fA = dA[0], lA = dA[dA.length - 1];
+        const fB = dB[0], lB = dB[dB.length - 1];
+        switch (sortBy) {
+          case 'urban_growth':
+            return (lB.share_of_total_land_urban_areas - fB.share_of_total_land_urban_areas) -
+                   (lA.share_of_total_land_urban_areas - fA.share_of_total_land_urban_areas);
+          case 'urban_growth_asc':
+            return (lA.share_of_total_land_urban_areas - fA.share_of_total_land_urban_areas) -
+                   (lB.share_of_total_land_urban_areas - fB.share_of_total_land_urban_areas);
+          case 'forest_decline':
+            return (fB.share_of_total_land_forest_use_land - lB.share_of_total_land_forest_use_land) -
+                   (fA.share_of_total_land_forest_use_land - lA.share_of_total_land_forest_use_land);
+          case 'cropland_decline':
+            return (fB.share_of_total_land_total_cropland - lB.share_of_total_land_total_cropland) -
+                   (fA.share_of_total_land_total_cropland - lA.share_of_total_land_total_cropland);
+          case 'grassland_decline':
+            return (fB.share_of_total_land_grassland_pasture_range - lB.share_of_total_land_grassland_pasture_range) -
+                   (fA.share_of_total_land_grassland_pasture_range - lA.share_of_total_land_grassland_pasture_range);
+          case 'parks_growth':
+            return (lB.share_of_total_land_rural_parks_wildlife - fB.share_of_total_land_rural_parks_wildlife) -
+                   (lA.share_of_total_land_rural_parks_wildlife - fA.share_of_total_land_rural_parks_wildlife);
+          case 'defense_decline':
+            return (fB.share_of_total_land_defense_industrial - lB.share_of_total_land_defense_industrial) -
+                   (fA.share_of_total_land_defense_industrial - lA.share_of_total_land_defense_industrial);
+          case 'defense_growth':
+            return (lB.share_of_total_land_defense_industrial - fB.share_of_total_land_defense_industrial) -
+                   (lA.share_of_total_land_defense_industrial - fA.share_of_total_land_defense_industrial);
+          case 'alphabetical': return a.localeCompare(b);
+          default: return 0;
+        }
+      });
+    }
+
+    // ─── Compute stack ───────────────────────────────────────────────────────────
+
+    function computeStack(stateData) {
+      const cats = getCategories();
+      return stateData.filter(d => d.year >= yearStart && d.year <= yearEnd).map(d => {
+        const row = { year: d.year, state_name: d.state_name, state_abbr: d.state_abbr };
+        const known = cats.filter(c => c.key !== 'other');
+        known.forEach(cat => { row[cat.key] = d[cat.key] || 0; });
+        const sum = known.reduce((s, cat) => s + (row[cat.key] || 0), 0);
+        row.other = Math.max(0, 1 - sum);
+        return row;
+      });
+    }
+
+    // ─── Tooltip ─────────────────────────────────────────────────────────────────
+
+    function addHoverInteraction(svg, stackedData, xScale, yScale) {
+      const years = stackedData.map(d => d.year);
+      if (years.length === 0) return;
+      const cats = getCategories();
+      svg.append('rect')
+        .attr('x', xScale.range()[0]).attr('y', yScale.range()[1])
+        .attr('width', xScale.range()[1] - xScale.range()[0])
+        .attr('height', yScale.range()[0] - yScale.range()[1])
+        .attr('fill', 'transparent')
+        .on('mousemove', function(event) {
+          const [mx] = d3.pointer(event);
+          const closest = years.reduce((a, b) => Math.abs(b - xScale.invert(mx)) < Math.abs(a - xScale.invert(mx)) ? b : a);
+          const row = stackedData.find(d => d.year === closest);
+          if (!row) return;
+          const cx = xScale(closest);
+          svg.selectAll('.hover-line').remove();
+          svg.append('line').attr('class', 'hover-line')
+            .attr('x1', cx).attr('x2', cx).attr('y1', yScale.range()[1]).attr('y2', yScale.range()[0]);
+          const lines = [`<strong>${row.state_name} · ${closest}</strong>`];
+          cats.forEach(cat => {
+            const pct = ((row[cat.key] || 0) * 100).toFixed(1);
+            lines.push(`<span style="color:${cat.color}">●</span> ${cat.label}: ${pct}%`);
+          });
+          tooltip.html(lines.join('<br>')).classed('visible', true)
+            .style('left', (event.clientX + 12) + 'px').style('top', (event.clientY - 10) + 'px');
+        })
+        .on('mouseleave', function() {
+          svg.selectAll('.hover-line').remove();
+          tooltip.classed('visible', false);
+        });
+    }
+
+    // ─── Chart Drawing ───────────────────────────────────────────────────────────
+
+    function getCurve() {
+      const curves = { monotoneX: d3.curveMonotoneX, linear: d3.curveLinear, step: d3.curveStep, basis: d3.curveBasis, cardinal: d3.curveCardinal };
+      return curves[curveType] || d3.curveMonotoneX;
+    }
+
+    function drawChart(svg, stateData, xScale, yScale, type) {
+      const cats = getCategories();
+      const stackedData = computeStack(stateData);
+      if (stackedData.length === 0) return stackedData;
+      const keys = cats.map(c => c.key);
+      const curve = getCurve();
+
+      if (type === 'stacked_area' || type === 'normalized_stream') {
+        const stack = d3.stack().keys(keys);
+        if (type === 'normalized_stream') stack.offset(d3.stackOffsetWiggle);
+        const series = stack(stackedData);
+        if (type === 'normalized_stream') {
+          const allVals = series.flat().flatMap(d => [d[0], d[1]]);
+          yScale.domain([d3.min(allVals), d3.max(allVals)]);
+        }
+        const area = d3.area()
+          .x(d => xScale(d.data.year)).y0(d => yScale(d[0])).y1(d => yScale(d[1])).curve(curve);
+        series.forEach((s, i) => {
+          svg.append('path').datum(s).attr('class', 'category-area')
+            .attr('fill', getDisplayColor(cats[i])).attr('opacity', areaOpacity).attr('d', area);
+        });
+      } else if (type === 'line') {
+        cats.filter(c => c.key !== 'other').forEach(cat => {
+          const line = d3.line().x(d => xScale(d.year)).y(d => yScale(d[cat.key] || 0)).curve(curve);
+          svg.append('path').datum(stackedData).attr('class', 'category-line').attr('stroke', getDisplayColor(cat)).attr('d', line);
+        });
+      } else if (type === 'stacked_bar') {
+        const stack = d3.stack().keys(keys);
+        const series = stack(stackedData);
+        const totalWidth = xScale.range()[1] - xScale.range()[0];
+        const barW = Math.max(3, totalWidth / stackedData.length * 0.7);
+        const gap = totalWidth / stackedData.length;
+        series.forEach((s, i) => {
+          s.forEach((d, j) => {
+            const x = xScale.range()[0] + j * gap + (gap - barW) / 2;
+            svg.append('rect')
+              .attr('x', x).attr('y', yScale(d[1]))
+              .attr('width', barW).attr('height', Math.max(0, yScale(d[0]) - yScale(d[1])))
+              .attr('fill', getDisplayColor(cats[i])).attr('opacity', areaOpacity);
+          });
+        });
+      } else if (type === 'pct_change') {
+        // Show % change from first year (indexed to 0)
+        if (stackedData.length < 2) return stackedData;
+        const first = stackedData[0];
+        const changeScale = d3.scaleLinear()
+          .domain([-0.5, 0.5])
+          .range([yScale.range()[0], yScale.range()[1]]);
+        // Zero line
+        svg.append('line')
+          .attr('x1', xScale.range()[0]).attr('x2', xScale.range()[1])
+          .attr('y1', changeScale(0)).attr('y2', changeScale(0))
+          .attr('stroke', '#ccc').attr('stroke-width', 0.5);
+        cats.filter(c => c.key !== 'other').forEach(cat => {
+          const line = d3.line()
+            .x(d => xScale(d.year))
+            .y(d => changeScale((d[cat.key] || 0) - (first[cat.key] || 0)))
+            .curve(curve);
+          svg.append('path').datum(stackedData).attr('class', 'category-line').attr('stroke', getDisplayColor(cat)).attr('d', line);
+        });
+      } else if (type === 'sparkline') {
+        // Minimal: just urban line highlighted, others faded
+        const urbanKey = 'share_of_total_land_urban_areas';
+        cats.filter(c => c.key !== 'other').forEach(cat => {
+          const line = d3.line().x(d => xScale(d.year)).y(d => yScale(d[cat.key] || 0)).curve(curve);
+          const isUrban = cat.key === urbanKey;
+          svg.append('path').datum(stackedData)
+            .attr('fill', 'none')
+            .attr('stroke', getDisplayColor(cat))
+            .attr('stroke-width', isUrban ? 2 : 0.8)
+            .attr('opacity', isUrban ? 1 : 0.3)
+            .attr('d', line);
+        });
+      } else if (type === 'treemap') {
+        const yearRow = stackedData.find(d => d.year === snapshotYear) || stackedData[stackedData.length - 1];
+        if (!yearRow) return stackedData;
+        const children = cats.filter(c => (yearRow[c.key] || 0) > 0).map(c => ({
+          name: c.label, value: yearRow[c.key] || 0, color: getDisplayColor(c)
+        }));
+        const root = d3.hierarchy({ children }).sum(d => d.value);
+        const w = xScale.range()[1] - xScale.range()[0];
+        const h = yScale.range()[0] - yScale.range()[1];
+        d3.treemap().size([w, h]).padding(1)(root);
+        root.leaves().forEach(leaf => {
+          svg.append('rect')
+            .attr('x', xScale.range()[0] + leaf.x0)
+            .attr('y', yScale.range()[1] + leaf.y0)
+            .attr('width', leaf.x1 - leaf.x0)
+            .attr('height', leaf.y1 - leaf.y0)
+            .attr('fill', leaf.data.color)
+            .attr('opacity', areaOpacity);
+          if ((leaf.x1 - leaf.x0) > 25 && (leaf.y1 - leaf.y0) > 10) {
+            svg.append('text')
+              .attr('x', xScale.range()[0] + leaf.x0 + 2)
+              .attr('y', yScale.range()[1] + leaf.y0 + 10)
+              .attr('font-size', '7px')
+              .attr('fill', '#fff')
+              .text(leaf.data.name);
+          }
+        });
+      } else if (type === 'waffle') {
+        const yearRow = stackedData.find(d => d.year === snapshotYear) || stackedData[stackedData.length - 1];
+        if (!yearRow) return stackedData;
+        const w = xScale.range()[1] - xScale.range()[0];
+        const h = yScale.range()[0] - yScale.range()[1];
+        const cols = 10, rows = 10;
+        const cellSize = Math.min(w / cols, h / rows);
+        const cellW = cellSize, cellH = cellSize;
+        const offsetX = (w - cols * cellSize) / 2;
+        const offsetY = (h - rows * cellSize) / 2;
+        // Build 100 cells, each assigned a category proportionally
+        const cells = [];
+        let remaining = 100;
+        cats.forEach(cat => {
+          const count = Math.round((yearRow[cat.key] || 0) * 100);
+          for (let j = 0; j < count && cells.length < 100; j++) {
+            cells.push(getDisplayColor(cat));
+          }
+          remaining -= count;
+        });
+        // Fill any rounding gaps
+        while (cells.length < 100) cells.push(getDisplayColor(cats[cats.length - 1]));
+        cells.forEach((color, i) => {
+          const col = i % cols, row = Math.floor(i / cols);
+          svg.append('rect')
+            .attr('x', xScale.range()[0] + offsetX + col * cellW + 0.5)
+            .attr('y', yScale.range()[1] + offsetY + row * cellH + 0.5)
+            .attr('width', cellW - 1)
+            .attr('height', cellH - 1)
+            .attr('rx', 1)
+            .attr('fill', color)
+            .attr('opacity', areaOpacity);
+        });
+      }
+      return stackedData;
+    }
+
+    // ─── Render All ──────────────────────────────────────────────────────────────
+
+    function renderAll() {
+      const cats = getCategories();
+      d3.select('#featured').html('');
+      d3.select('#compact').html('');
+      d3.select('#legend').html('');
+
+      // Set compact columns via CSS variable
+      document.documentElement.style.setProperty('--compact-cols', compactCols);
+
+      // Update headline
+      const copy = COPY[sortBy] || COPY.alphabetical;
+      const isSnapshotMode = chartType === 'treemap' || chartType === 'waffle';
+      if (isSnapshotMode) {
+        const sortLabel = {
+          urban_growth: 'ranked by urban growth',
+          urban_growth_asc: 'ranked by least urban growth',
+          forest_decline: 'ranked by forest loss',
+          cropland_decline: 'ranked by cropland loss',
+          grassland_decline: 'ranked by grassland loss',
+          parks_growth: 'ranked by parks growth',
+          defense_decline: 'ranked by defense land loss',
+          defense_growth: 'ranked by defense land growth',
+          alphabetical: 'alphabetical'
+        }[sortBy] || '';
+        const snapshotHeadlines = {
+          urban_growth: `Where Concrete Took Over by ${snapshotYear}`,
+          urban_growth_asc: `The States Still Untouched by Sprawl in ${snapshotYear}`,
+          forest_decline: `America's Shrinking Forests, ${snapshotYear}`,
+          cropland_decline: `Where the Farms Disappeared by ${snapshotYear}`,
+          grassland_decline: `The Range That Shrank by ${snapshotYear}`,
+          parks_growth: `How Much Land Was Saved by ${snapshotYear}`,
+          defense_decline: `After the Bases Closed, ${snapshotYear}`,
+          defense_growth: `Where the Pentagon Staked Its Land by ${snapshotYear}`,
+          alphabetical: `How America Used Its Land in ${snapshotYear}`
+        };
+        d3.select('#headline').text(snapshotHeadlines[sortBy] || snapshotHeadlines.alphabetical);
+        d3.select('#subheadline').text(`Land-use composition by state, ${sortLabel}`);
+      } else {
+        d3.select('#headline').text(copy.headline);
+        d3.select('#subheadline').text(copy.subheadline);
+      }
+
+      // Legend
+      const legend = d3.select('#legend');
+      cats.forEach(cat => {
+        const item = legend.append('div').attr('class', 'legend-item');
+        item.append('div').attr('class', 'legend-swatch').style('background-color', getDisplayColor(cat));
+        item.append('span').text(cat.label);
+      });
+
+      const sorted = getSortedStates();
+      const featured = sorted.slice(0, featuredCount);
+      const compact = sorted.slice(featuredCount);
+
+      const yDomain = (chartType === 'line' || chartType === 'slope' || chartType === 'horizon')
+        ? [0, d3.max(Array.from(byState.values()).flat(), d =>
+            Math.max(d.share_of_total_land_total_cropland || 0, d.share_of_total_land_urban_areas || 0,
+                     d.share_of_total_land_forest_use_land || 0, d.share_of_total_land_grassland_pasture_range || 0))]
+        : [0, 1];
+
+      // Featured
+      if (featured.length > 0) {
+        const container = d3.select('#featured');
+        container.style('grid-template-columns', `repeat(${Math.min(4, featured.length)}, 1fr)`);
+        const xScale = d3.scaleLinear().domain([yearStart, yearEnd]).range([FEAT_MARGIN.left, FEAT_WIDTH - FEAT_MARGIN.right]);
+        const yScale = d3.scaleLinear().domain(yDomain).range([FEAT_HEIGHT - FEAT_MARGIN.bottom, FEAT_MARGIN.top]);
+
+        featured.forEach((abbr, idx) => {
+          const stateData = byState.get(abbr);
+          if (!stateData) return;
+          const panel = container.append('div');
+          const header = panel.append('div').attr('class', 'panel-header');
+          header.html(miniMapHTML(abbr, 22));
+          header.append('span').attr('class', 'panel-title').text(stateData[0].state_name);
+
+          // Annotation right below title — use snapshot copy for treemap/waffle
+          const isSnapshot = chartType === 'treemap' || chartType === 'waffle';
+          let ann;
+          if (isSnapshot) {
+            ann = getSnapshotAnnotation(abbr, stateData);
+          } else {
+            ann = copy.annotations && copy.annotations[abbr];
+          }
+          if (ann) panel.append('p').attr('class', 'panel-annotation').text(ann);
+
+          const svg = panel.append('svg')
+            .attr('viewBox', `0 0 ${FEAT_WIDTH} ${FEAT_HEIGHT}`)
+            .attr('width', FEAT_WIDTH).attr('height', FEAT_HEIGHT);
+
+          if (!isSnapshot) {
+            svg.append('g').attr('class', 'axis')
+              .attr('transform', `translate(0,${FEAT_HEIGHT - FEAT_MARGIN.bottom})`)
+              .call(d3.axisBottom(xScale).tickValues([yearStart, yearEnd]).tickFormat(d3.format('d'))
+                .tickSize(-(FEAT_HEIGHT - FEAT_MARGIN.top - FEAT_MARGIN.bottom)))
+              .call(g => g.select('.domain').remove())
+              .call(g => g.selectAll('.tick line').attr('stroke', '#eee'));
+
+            if (idx === 0 && yDomain[1] === 1 && chartType !== 'normalized_stream') {
+              svg.append('g').attr('class', 'axis')
+                .attr('transform', `translate(${FEAT_MARGIN.left},0)`)
+                .call(d3.axisLeft(yScale).tickValues([0.25, 0.5, 0.75, 1]).tickFormat(d => Math.round(d * 100) + '%')
+                  .tickSize(-(FEAT_WIDTH - FEAT_MARGIN.left - FEAT_MARGIN.right)))
+                .call(g => g.select('.domain').remove())
+                .call(g => g.selectAll('.tick line').attr('stroke', '#eee'));
+            }
+          }
+
+          const stackedData = drawChart(svg, stateData, xScale, yScale, chartType);
+          if (!isSnapshot) addHoverInteraction(svg, stackedData, xScale, yScale);
+        });
+      }
+
+      // Compact
+      if (compact.length > 0) {
+        const grid = d3.select('#compact').append('div').attr('class', 'compact-grid')
+;
+        const xScale = d3.scaleLinear().domain([yearStart, yearEnd]).range([COMPACT_MARGIN.left, COMPACT_WIDTH - COMPACT_MARGIN.right]);
+        const yScale = d3.scaleLinear().domain(yDomain).range([COMPACT_HEIGHT - COMPACT_MARGIN.bottom, COMPACT_MARGIN.top]);
+
+        compact.forEach((abbr, i) => {
+          const stateData = byState.get(abbr);
+          if (!stateData) return;
+          const panel = grid.append('div');
+          const header = panel.append('div').attr('class', 'compact-header');
+          header.html(miniMapHTML(abbr, 16));
+          header.append('span').attr('class', 'compact-title').text(stateData[0].state_name);
+          const isSnapshot = chartType === 'treemap' || chartType === 'waffle';
+          const svg = panel.append('svg')
+            .attr('viewBox', `0 0 ${COMPACT_WIDTH} ${COMPACT_HEIGHT}`)
+            .attr('width', COMPACT_WIDTH).attr('height', COMPACT_HEIGHT);
+
+          if (!isSnapshot && i === 0 && yDomain[1] === 1 && chartType !== 'normalized_stream') {
+            svg.append('g').attr('class', 'axis')
+              .attr('transform', `translate(${COMPACT_MARGIN.left},0)`)
+              .call(d3.axisLeft(yScale).tickValues([0.5, 1]).tickFormat(d => Math.round(d * 100) + '%').tickSize(0))
+              .call(g => g.select('.domain').remove());
+          }
+
+          const stackedData = drawChart(svg, stateData, xScale, yScale, chartType);
+          if (!isSnapshot) addHoverInteraction(svg, stackedData, xScale, yScale);
+        });
+      }
+    }
+
+    // ─── Admin Setup ─────────────────────────────────────────────────────────────
+
+    // Keep track of "other" default color for getCategories
+    let otherColor = '#e0e0e0';
+
+    function applyColorScheme(name) {
+      const scheme = COLOR_SCHEMES[name];
+      if (!scheme) return;
+      BASE_CATEGORIES[0].color = scheme.grassland;
+      BASE_CATEGORIES[1].color = scheme.forest;
+      BASE_CATEGORIES[2].color = scheme.cropland;
+      BASE_CATEGORIES[3].color = scheme.urban;
+      const parksOpt = OTHER_OPTIONS.find(o => o.key === 'share_of_total_land_rural_parks_wildlife');
+      const defenseOpt = OTHER_OPTIONS.find(o => o.key === 'share_of_total_land_defense_industrial');
+      if (parksOpt) parksOpt.color = scheme.parks;
+      if (defenseOpt) defenseOpt.color = scheme.defense;
+      otherColor = scheme.other;
+      rebuildColorPickers();
+      renderAll();
+    }
+
+    function setupAdmin() {
+      d3.select('#sort-select').on('change', function() { sortBy = this.value; renderAll(); });
+
+      d3.selectAll('.chart-type-grid button').on('click', function() {
+        d3.selectAll('.chart-type-grid button').classed('active', false);
+        d3.select(this).classed('active', true);
+        chartType = this.dataset.type;
+        d3.select('#snapshot-controls').style('display', (chartType === 'treemap' || chartType === 'waffle') ? 'block' : 'none');
+        renderAll();
+      });
+
+      // Snapshot year selector (shared by treemap and waffle)
+      const snapSelect = d3.select('#snapshot-year');
+      ALL_YEARS.forEach(y => snapSelect.append('option').attr('value', y).text(y));
+      snapSelect.property('value', 2017);
+      snapSelect.on('change', function() { snapshotYear = +this.value; renderAll(); });
+
+      d3.select('#year-start').on('input', function() {
+        yearStart = +this.value;
+        if (yearStart > yearEnd) { yearEnd = yearStart; d3.select('#year-end').property('value', yearEnd); }
+        d3.select('#year-range-display').text(`${yearStart} – ${yearEnd}`);
+        renderAll();
+      });
+      d3.select('#year-end').on('input', function() {
+        yearEnd = +this.value;
+        if (yearEnd < yearStart) { yearStart = yearEnd; d3.select('#year-start').property('value', yearStart); }
+        d3.select('#year-range-display').text(`${yearStart} – ${yearEnd}`);
+        renderAll();
+      });
+
+      // Color scheme
+      d3.select('#color-scheme').on('change', function() { applyColorScheme(this.value); });
+
+      // Opacity
+      d3.select('#opacity-slider').on('input', function() { areaOpacity = +this.value; renderAll(); });
+
+      // Mini-map toggle
+      d3.select('#toggle-minimap').on('change', function() { showMiniMap = this.checked; renderAll(); });
+
+      // Desaturate
+      d3.select('#desaturate-slider').on('input', function() {
+        desaturateAmount = +this.value;
+        d3.select('#desaturate-display').text(desaturateAmount === 0 ? 'Off' : Math.round(desaturateAmount * 100) + '%');
+        renderAll();
+      });
+
+      // Curve
+      d3.select('#curve-select').on('change', function() { curveType = this.value; renderAll(); });
+
+      // Compact columns
+      d3.select('#compact-cols').on('change', function() { compactCols = +this.value; renderAll(); });
+
+      // Other breakdown checkboxes
+      d3.selectAll('#other-options input').on('change', function() {
+        activeOtherKeys = [];
+        d3.selectAll('#other-options input').each(function() {
+          if (this.checked) activeOtherKeys.push(this.value);
+        });
+        rebuildColorPickers();
+        renderAll();
+      });
+
+      d3.select('#featured-count').on('change', function() { featuredCount = +this.value; renderAll(); });
+
+      // ─── Graphic export ───────────────────────────────────────────────
+      function downloadBlob(blob, filename) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+
+      d3.select('#export-svg-btn').on('click', function() {
+        const el = document.getElementById('export-area');
+        const ns = 'http://www.w3.org/2000/svg';
+        const rect = el.getBoundingClientRect();
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('xmlns', ns);
+        svg.setAttribute('width', rect.width);
+        svg.setAttribute('height', rect.height);
+        svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
+        const fo = document.createElementNS(ns, 'foreignObject');
+        fo.setAttribute('x', 0); fo.setAttribute('y', 0);
+        fo.setAttribute('width', rect.width); fo.setAttribute('height', rect.height);
+        const clone = el.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+        clone.style.background = '#fafafa';
+        fo.appendChild(clone);
+        svg.appendChild(fo);
+        const svgString = new XMLSerializer().serializeToString(svg);
+        downloadBlob(new Blob([svgString], { type: 'image/svg+xml' }), 'land-use-chart.svg');
+      });
+
+      d3.select('#export-png-btn').on('click', function() {
+        html2canvas(document.getElementById('export-area'), { scale: 2, backgroundColor: '#fafafa' }).then(canvas => {
+          canvas.toBlob(blob => downloadBlob(blob, 'land-use-chart.png'), 'image/png');
+        });
+      });
+
+      d3.select('#export-jpg-btn').on('click', function() {
+        html2canvas(document.getElementById('export-area'), { scale: 2, backgroundColor: '#fafafa' }).then(canvas => {
+          canvas.toBlob(blob => downloadBlob(blob, 'land-use-chart.jpg'), 'image/jpeg', 0.95);
+        });
+      });
+
+      // ─── Settings export ───────────────────────────────────────────────
+      // Export
+      d3.select('#export-btn').on('click', function() {
+        const settings = {
+          sortBy, chartType, yearStart, yearEnd, featuredCount,
+          desaturateAmount, curveType, compactCols,
+          activeOtherKeys,
+          colors: {
+            grassland: BASE_CATEGORIES[0].color,
+            forest: BASE_CATEGORIES[1].color,
+            cropland: BASE_CATEGORIES[2].color,
+            urban: BASE_CATEGORIES[3].color,
+            parks: OTHER_OPTIONS.find(o => o.key === 'share_of_total_land_rural_parks_wildlife').color,
+            defense: OTHER_OPTIONS.find(o => o.key === 'share_of_total_land_defense_industrial').color,
+            other: otherColor,
+          }
+        };
+        const box = document.getElementById('settings-box');
+        box.style.display = 'block';
+        box.value = JSON.stringify(settings, null, 2);
+        box.select();
+      });
+
+      // Import
+      d3.select('#import-btn').on('click', function() {
+        const box = document.getElementById('settings-box');
+        box.style.display = 'block';
+        if (!box.value.trim()) return;
+        try {
+          const s = JSON.parse(box.value);
+          if (s.sortBy) { sortBy = s.sortBy; d3.select('#sort-select').property('value', sortBy); }
+          if (s.chartType) {
+            chartType = s.chartType;
+            d3.selectAll('.chart-type-grid button').classed('active', false);
+            d3.selectAll('.chart-type-grid button').filter(function() { return this.dataset.type === chartType; }).classed('active', true);
+          }
+          if (s.yearStart != null) { yearStart = s.yearStart; d3.select('#year-start').property('value', yearStart); }
+          if (s.yearEnd != null) { yearEnd = s.yearEnd; d3.select('#year-end').property('value', yearEnd); }
+          d3.select('#year-range-display').text(`${yearStart} – ${yearEnd}`);
+          if (s.featuredCount != null) { featuredCount = s.featuredCount; d3.select('#featured-count').property('value', featuredCount); }
+          if (s.desaturateAmount != null) { desaturateAmount = s.desaturateAmount; d3.select('#desaturate-slider').property('value', desaturateAmount); d3.select('#desaturate-display').text(desaturateAmount === 0 ? 'Off' : Math.round(desaturateAmount * 100) + '%'); }
+          if (s.curveType) { curveType = s.curveType; d3.select('#curve-select').property('value', curveType); }
+          if (s.compactCols) { compactCols = s.compactCols; d3.select('#compact-cols').property('value', compactCols); }
+          if (s.activeOtherKeys) {
+            activeOtherKeys = s.activeOtherKeys;
+            d3.selectAll('#other-options input').each(function() { this.checked = activeOtherKeys.includes(this.value); });
+          }
+          if (s.colors) {
+            BASE_CATEGORIES[0].color = s.colors.grassland || BASE_CATEGORIES[0].color;
+            BASE_CATEGORIES[1].color = s.colors.forest || BASE_CATEGORIES[1].color;
+            BASE_CATEGORIES[2].color = s.colors.cropland || BASE_CATEGORIES[2].color;
+            BASE_CATEGORIES[3].color = s.colors.urban || BASE_CATEGORIES[3].color;
+            const parksOpt = OTHER_OPTIONS.find(o => o.key === 'share_of_total_land_rural_parks_wildlife');
+            const defenseOpt = OTHER_OPTIONS.find(o => o.key === 'share_of_total_land_defense_industrial');
+            if (parksOpt && s.colors.parks) parksOpt.color = s.colors.parks;
+            if (defenseOpt && s.colors.defense) defenseOpt.color = s.colors.defense;
+            if (s.colors.other) otherColor = s.colors.other;
+          }
+          rebuildColorPickers();
+          renderAll();
+        } catch (e) { alert('Invalid JSON: ' + e.message); }
+      });
+
+      // Admin panel toggle (mobile)
+      d3.select('#admin-toggle').on('click', function() {
+        const panel = document.getElementById('admin');
+        panel.classList.toggle('open');
+        this.textContent = panel.classList.contains('open') ? 'Close' : 'Settings';
+      });
+
+      // Mobile-friendly layout
+      d3.select('#mobile-layout-btn').on('click', function() {
+        featuredCount = 4;
+        compactCols = 4;
+        showMiniMap = false;
+        d3.select('#featured-count').property('value', 4);
+        d3.select('#compact-cols').property('value', 4);
+        d3.select('#toggle-minimap').property('checked', false);
+        renderAll();
+      });
+
+      // Desktop layout reset
+      d3.select('#desktop-layout-btn').on('click', function() {
+        featuredCount = 8;
+        compactCols = 8;
+        showMiniMap = true;
+        d3.select('#featured-count').property('value', 8);
+        d3.select('#compact-cols').property('value', 8);
+        d3.select('#toggle-minimap').property('checked', true);
+        renderAll();
+      });
+
+      rebuildColorPickers();
+    }
+
+    function rebuildColorPickers() {
+      const cats = getCategories();
+      const div = d3.select('#color-pickers');
+      div.html('');
+      cats.forEach((cat, i) => {
+        const row = div.append('div').attr('class', 'color-row');
+        row.append('input').attr('type', 'color').attr('value', cat.color)
+          .on('input', function() {
+            // Update color in the right array
+            const baseIdx = BASE_CATEGORIES.findIndex(c => c.key === cat.key);
+            if (baseIdx >= 0) { BASE_CATEGORIES[baseIdx].color = this.value; }
+            const otherIdx = OTHER_OPTIONS.findIndex(c => c.key === cat.key);
+            if (otherIdx >= 0) { OTHER_OPTIONS[otherIdx].color = this.value; }
+            if (cat.key === 'other') { /* just re-render */ }
+            renderAll();
+          });
+        row.append('span').text(cat.label);
+      });
+    }
+
+    // ─── Load & Init ─────────────────────────────────────────────────────────────
+
+    const ALL_KEYS = [
+      'share_of_total_land_total_cropland', 'share_of_total_land_urban_areas',
+      'share_of_total_land_forest_use_land', 'share_of_total_land_grassland_pasture_range',
+      'share_of_total_land_rural_parks_wildlife', 'share_of_total_land_defense_industrial',
+      'share_of_total_land_rural_transportation', 'share_of_total_land_farmsteads_roads_misc_farmland',
+      'share_of_total_land_miscellaneous_other_land', 'share_of_total_land_special_uses_land'
+    ];
+
+    d3.csv('outputs/ers_major_land_uses/ers_mlu_state_year_48_states_wide.csv').then(raw => {
+      raw.forEach(d => {
+        d.year = +d.year;
+        ALL_KEYS.forEach(k => { d[k] = +d[k]; });
+      });
+      byState = d3.group(raw, d => d.state_abbr);
+      setupAdmin();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
