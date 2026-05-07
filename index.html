@@ -179,9 +179,9 @@
 
     <h3>Time-series charts</h3>
     <div class="chart-type-grid">
-      <button data-type="stacked_area">Stacked Area</button>
+      <button data-type="stacked_area" class="active">Stacked Area</button>
       <button data-type="line">Line</button>
-      <button data-type="normalized_stream" class="active">Stream</button>
+      <button data-type="normalized_stream">Stream</button>
       <button data-type="stacked_bar">Stacked Bar</button>
       <button data-type="pct_change">% Change</button>
       <button data-type="sparkline">Sparkline</button>
@@ -291,7 +291,7 @@
     // ─── Configuration ───────────────────────────────────────────────────────────
 
     const BASE_CATEGORIES = [
-      { key: 'share_of_total_land_grassland_pasture_range', label: 'Grassland', color: '#C4A882' },
+      { key: 'share_of_total_land_grassland_pasture_range', label: 'Grassland', color: '#B8C98A' },
       { key: 'share_of_total_land_forest_use_land', label: 'Forest', color: '#2D6A4F' },
       { key: 'share_of_total_land_total_cropland', label: 'Cropland', color: '#D4A017' },
       { key: 'share_of_total_land_urban_areas', label: 'Urban', color: '#333333' },
@@ -516,7 +516,7 @@
     }
 
     const ALL_YEARS = [1945,1949,1954,1959,1964,1969,1974,1978,1982,1987,1992,1997,2002,2007,2012,2017];
-    let chartType = 'normalized_stream';
+    let chartType = 'stacked_area';
     let sortBy = 'urban_growth';
     let yearStart = 1945;
     let yearEnd = 2017;
@@ -559,7 +559,7 @@
     let byState = null;
 
     const COLOR_SCHEMES = {
-      default:    { grassland: '#C4A882', forest: '#2D6A4F', cropland: '#D4A017', urban: '#333333', parks: '#7CB342', defense: '#17a8ab', other: '#e0e0e0' },
+      default:    { grassland: '#B8C98A', forest: '#2D6A4F', cropland: '#D4A017', urban: '#333333', parks: '#7CB342', defense: '#17a8ab', other: '#e0e0e0' },
       muted:      { grassland: '#A8977A', forest: '#4A7C6F', cropland: '#BF9B30', urban: '#5C5C5C', parks: '#6D9B3A', defense: '#7D6050', other: '#D5D0CA' },
       vivid:      { grassland: '#FF8F00', forest: '#1B5E20', cropland: '#FFD600', urban: '#D50000', parks: '#00C853', defense: '#6D4C41', other: '#BDBDBD' },
       monochrome: { grassland: '#BDBDBD', forest: '#616161', cropland: '#9E9E9E', urban: '#212121', parks: '#757575', defense: '#424242', other: '#EEEEEE' },
