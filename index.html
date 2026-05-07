@@ -291,8 +291,8 @@
     // ─── Configuration ───────────────────────────────────────────────────────────
 
     const BASE_CATEGORIES = [
-      { key: 'share_of_total_land_grassland_pasture_range', label: 'Grassland', color: '#B8C98A' },
       { key: 'share_of_total_land_forest_use_land', label: 'Forest', color: '#2D6A4F' },
+      { key: 'share_of_total_land_grassland_pasture_range', label: 'Grassland', color: '#B8C98A' },
       { key: 'share_of_total_land_total_cropland', label: 'Cropland', color: '#D4A017' },
       { key: 'share_of_total_land_urban_areas', label: 'Urban', color: '#333333' },
     ];
@@ -309,18 +309,28 @@
     let activeOtherKeys = ['share_of_total_land_rural_parks_wildlife', 'share_of_total_land_defense_industrial'];
 
     function getCategories() {
-      // Stack order: Grassland, Forest, [Parks, Defense, ...], Cropland, Urban, Other
+      // Default order (bottom to top): Forest, Parks, Grassland, Defense, Cropland, Urban, Other
       const cats = [];
-      // Add Grassland and Forest
-      cats.push(BASE_CATEGORIES[0]); // Grassland
-      cats.push(BASE_CATEGORIES[1]); // Forest
-      // Insert active "Other" sub-categories here (between Forest and Cropland)
-      OTHER_OPTIONS.filter(o => activeOtherKeys.includes(o.key)).forEach(o => cats.push(o));
-      // Add Cropland and Urban
+      cats.push(BASE_CATEGORIES[0]); // Forest
+      const parksOpt = OTHER_OPTIONS.find(o => o.key === 'share_of_total_land_rural_parks_wildlife');
+      if (parksOpt && activeOtherKeys.includes(parksOpt.key)) cats.push(parksOpt);
+      cats.push(BASE_CATEGORIES[1]); // Grassland
+      const defenseOpt = OTHER_OPTIONS.find(o => o.key === 'share_of_total_land_defense_industrial');
+      if (defenseOpt && activeOtherKeys.includes(defenseOpt.key)) cats.push(defenseOpt);
+      OTHER_OPTIONS.filter(o => activeOtherKeys.includes(o.key) && o.key !== 'share_of_total_land_rural_parks_wildlife' && o.key !== 'share_of_total_land_defense_industrial').forEach(o => cats.push(o));
       cats.push(BASE_CATEGORIES[2]); // Cropland
       cats.push(BASE_CATEGORIES[3]); // Urban
-      // Residual Other on top
       cats.push({ key: 'other', label: 'Other', color: otherColor });
+
+      // Move the sorted-by category to the bottom of the stack so it sits on the baseline
+      const highlightKey = SORT_HIGHLIGHT_KEY[sortBy];
+      if (highlightKey) {
+        const idx = cats.findIndex(c => c.key === highlightKey);
+        if (idx > 0) {
+          const [item] = cats.splice(idx, 1);
+          cats.unshift(item);
+        }
+      }
       return cats;
     }
 
@@ -966,8 +976,8 @@
     function applyColorScheme(name) {
       const scheme = COLOR_SCHEMES[name];
       if (!scheme) return;
-      BASE_CATEGORIES[0].color = scheme.grassland;
-      BASE_CATEGORIES[1].color = scheme.forest;
+      BASE_CATEGORIES[0].color = scheme.forest;
+      BASE_CATEGORIES[1].color = scheme.grassland;
       BASE_CATEGORIES[2].color = scheme.cropland;
       BASE_CATEGORIES[3].color = scheme.urban;
       const parksOpt = OTHER_OPTIONS.find(o => o.key === 'share_of_total_land_rural_parks_wildlife');
