@@ -176,6 +176,12 @@
       <option value="urban_growth_asc">Urban growth (lowest)</option>
       <option value="alphabetical">Alphabetical</option>
     </select>
+    <label>Sorted category position:</label>
+    <select id="sort-position">
+      <option value="bottom" selected>Bottom (baseline)</option>
+      <option value="top">Top</option>
+      <option value="default">Default order</option>
+    </select>
 
     <h3>Time-series charts</h3>
     <div class="chart-type-grid">
@@ -322,13 +328,19 @@
       cats.push(BASE_CATEGORIES[3]); // Urban
       cats.push({ key: 'other', label: 'Other', color: otherColor });
 
-      // Move the sorted-by category to the bottom of the stack so it sits on the baseline
-      const highlightKey = SORT_HIGHLIGHT_KEY[sortBy];
-      if (highlightKey) {
-        const idx = cats.findIndex(c => c.key === highlightKey);
-        if (idx > 0) {
-          const [item] = cats.splice(idx, 1);
-          cats.unshift(item);
+      // Move the sorted-by category based on position setting
+      if (sortPosition !== 'default') {
+        const highlightKey = SORT_HIGHLIGHT_KEY[sortBy];
+        if (highlightKey) {
+          const idx = cats.findIndex(c => c.key === highlightKey);
+          if (idx >= 0) {
+            const [item] = cats.splice(idx, 1);
+            if (sortPosition === 'bottom') {
+              cats.unshift(item); // before everything
+            } else if (sortPosition === 'top') {
+              cats.splice(cats.length - 1, 0, item); // before "Other" (which is always last)
+            }
+          }
         }
       }
       return cats;
@@ -536,6 +548,7 @@
     let curveType = 'monotoneX';
     let compactCols = 8;
     let snapshotYear = 2017;
+    let sortPosition = 'bottom'; // 'bottom', 'top', or 'default'
 
     // Map sort mode to the key it highlights
     const SORT_HIGHLIGHT_KEY = {
@@ -991,6 +1004,7 @@
 
     function setupAdmin() {
       d3.select('#sort-select').on('change', function() { sortBy = this.value; renderAll(); });
+      d3.select('#sort-position').on('change', function() { sortPosition = this.value; renderAll(); });
 
       d3.selectAll('.chart-type-grid button').on('click', function() {
         d3.selectAll('.chart-type-grid button').classed('active', false);
